@@ -1,0 +1,126 @@
+:plugin: java_stack_digest
+:type: filter
+
+///////////////////////////////////////////
+START - GENERATED VARIABLES, DO NOT EDIT!
+///////////////////////////////////////////
+:version: %VERSION%
+:release_date: %RELEASE_DATE%
+:changelog_url: %CHANGELOG_URL%
+:include_path: ../../../../logstash/docs/include
+///////////////////////////////////////////
+END - GENERATED VARIABLES, DO NOT EDIT!
+///////////////////////////////////////////
+
+[id="plugins-{type}s-{plugin}"]
+
+=== Java Stack Digest filter plugin
+
+include::{include_path}/plugin_header.asciidoc[]
+
+==== Description
+
+The _Java stack digest_ filter computes a *stable* digest (MD5) from a Java stack trace.
+
+Such a digest allows matching several occurrences of the same error.
+
+Then it becomes super easy with elasticsearch or any other logs centralization and indexation system to:
+
+* *count* distinct type of errors that occur in your code over time,
+* *count* occurrences and frequency of a given type of error,
+* *detect* when a (new) type of error occurred for the first time (maybe linking this to a new version being deployed?).
+
+The stack hash may also become a basic error id that you could link your bug tracker with...
+
+This is a basic port of the https://github.com/logstash/logstash-logback-encoder/blob/master/stack-hash.md[stack hash feature]
+from the `logstash-logback-encoder` Java library.
+
+[id="plugins-{type}s-{plugin}-options"]
+==== Java Stack Digest Filter Configuration Options
+
+This plugin supports the following configuration options plus the <<plugins-{type}s-{plugin}-common-options>> described later.
+
+[cols="<,<,<",options="header",]
+|=======================================================================
+|Setting |Input type|Required
+| <<plugins-{type}s-{plugin}-source>> |<<string,string>>|No
+| <<plugins-{type}s-{plugin}-target>> |<<string,string>>|No
+| <<plugins-{type}s-{plugin}-exclude_no_source>> |<<boolean,boolean>>|No
+| <<plugins-{type}s-{plugin}-excludes>> |<<array,array>>|No
+|=======================================================================
+
+Also see <<plugins-{type}s-{plugin}-common-options>> for a list of options supported by all
+filter plugins.
+
+[id="plugins-{type}s-{plugin}-source"]
+===== `source`
+
+  * Value type is <<string,string>>
+  * Default value is `"stack_trace"`
+
+The name of the field containing the Java stack trace.
+
+
+[id="plugins-{type}s-{plugin}-target"]
+===== `target`
+
+  * Value type is <<string,string>>
+  * Default value is `"stack_digest"`
+
+The name of the field to assign the computed stack trace digest.
+
+[id="plugins-{type}s-{plugin}-exclude_no_source"]
+===== `exclude_no_source`
+
+  * Value type is <<boolean,boolean>>
+  * Default value is `true`
+
+Determines whether stack trace elements without source info (no filename or line number) should be excluded from the digest.
+
+Generally speaking, Java stack trace elements with no source information are dynamically generated classes.
+
+So in most cases it's a wise choice to exclude them from the digest computation (and by the way much faster than evaluating
+a list of regular expression patterns).
+
+But you might also have no source information for classes *not compiled in debug mode*. In such a case, set this option
+to `false` and tweak your `excludes` patterns.
+
+[id="plugins-{type}s-{plugin}-excludes"]
+===== `excludes`
+
+  * Value type is <<array,array>>
+  * Defaults to standard dynamic Java reflection and generated classes patterns (see below)
+
+An array of regular expression patterns that will be used to *exclude* stack trace elements.
+
+Patterns are tested against the Java *classname and method*.
+
+Excluding non-stable elements from the stack trace is key if you want to produce stable digests.
+
+Non stable elements are:
+
+* *generated classes*: they may vary from one execution to another,
+* *dynamic invocations* (reflexion or else): they're purely technical and quite implementation-dependent,
+* underlying *technical libraries* (vendor specific JDK classes, JEE container, Spring Framework, ...):
+because they may change when upgrading version or even changing your configuration (ex: adding a new servlet filter).
+
+For more information about the https://github.com/logstash/logstash-logback-encoder/blob/master/stack-hash.md[digest hash stability challenge].
+
+Default exclusion patterns:
+[source,ruby]
+   [
+     '\\$\\$FastClassByCGLIB\\$\\$',
+     '\\$\\$EnhancerBySpringCGLIB\\$\\$',
+     '^sun\\.reflect\\..*\\.invoke',
+     '^com\\.sun\\.',
+     '^sun\\.net\\.',
+     '^java\\.lang\\.reflect\\.Method\\.invoke',
+     '^net\\.sf\\.cglib\\.proxy\\.MethodProxy\\.invoke',
+     '^java\\.util\\.concurrent\\.ThreadPoolExecutor\\.runWorker',
+     '^java\\.lang\\.Thread\\.run$'
+   ]
+
+
+
+[id="plugins-{type}s-{plugin}-common-options"]
+include::{include_path}/{type}.asciidoc[]
