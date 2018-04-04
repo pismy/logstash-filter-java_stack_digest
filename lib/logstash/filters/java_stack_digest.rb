@@ -17,9 +17,6 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
   #
   config_name "java_stack_digest"
 
-  # activates debug traces
-  config :debug, :validate => :boolean, :default => false
-
   # The name of the input field supposed to contain the Java stack trace (default 'stack_trace').
   config :source, :validate => :string, :default => "stack_trace"
 
@@ -67,11 +64,11 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
 
   # computes a Java stack trace digest
   def compute_digest(stack_trace, level)
+    md5 = Digest::MD5.new
 
     # 1: extract error class from first line
     error_class = @error_pattern.match(stack_trace.shift)
-    puts "Error (#{level}) #{error_class}:" if @debug
-    md5 = Digest::MD5.new
+    @logger.debug("Error (#{level}) #{error_class[1]}:")
     # digest: error classname
     md5.update error_class[1]
 
@@ -85,9 +82,9 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
           # current line is a stack trace element
           ste_count+=1
           if is_excluded?(stack_element)
-            puts "  (-) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})" if @debug
+            @logger.debug("  (-) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})")
           else
-            puts "  (+) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})" if @debug
+            @logger.debug("  (+) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})")
             # digest: STE classname and method
             md5.update stack_element[1]
             # digest: line number (if present)
@@ -112,6 +109,7 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
     return md5.hexdigest
   end
 
+  # Determines whether the given stack trace element (Regexp match) should be excluded from digest computation
   def is_excluded?(stack_element)
     # 1: exclude elements without source info ?
     if @exclude_no_source and (stack_element[2].nil? or stack_element[2].empty?) and (stack_element[3].nil? or stack_element[3].empty?)

@@ -60,6 +60,7 @@ filter plugins.
 
 The name of the field containing the Java stack trace.
 
+Default value is compatible with the https://github.com/logstash/logstash-logback-encoder#standard-fields[logstash-logback-encoder] library.
 
 [id="plugins-{type}s-{plugin}-target"]
 ===== `target`
@@ -104,7 +105,7 @@ Non stable elements are:
 * underlying *technical libraries* (vendor specific JDK classes, JEE container, Spring Framework, ...):
 because they may change when upgrading version or even changing your configuration (ex: adding a new servlet filter).
 
-For more information about the https://github.com/logstash/logstash-logback-encoder/blob/master/stack-hash.md[digest hash stability challenge].
+For more information about the https://github.com/pismy/logstash-filter-java_stack_digest/blob/master/stack-digest.md[stack digest stability challenge].
 
 Default exclusion patterns:
 [source,ruby]

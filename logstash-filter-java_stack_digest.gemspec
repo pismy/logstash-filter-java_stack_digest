@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-filter-java_stack_digest'
-  s.version       = '0.1.0'
+  s.version       = '0.1.1'
   s.licenses      = ['Apache-2.0']
   s.summary       = 'Logstash filter that computes a digest of Java stack traces.'
   s.description   = 'Logstash filter that computes a digest of Java stack traces.'
