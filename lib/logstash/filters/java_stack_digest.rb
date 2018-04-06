@@ -56,35 +56,35 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
 
     return if stack_trace.nil? || stack_trace.empty?
 
-    event.set(@target, compute_digest(stack_trace.split("\n"), 0))
+    # compute digest add to the event
+    event.set(@target, compute_digest(stack_trace.split("\n")))
 
     # filter_matched should go in the last line of our successful code
     filter_matched(event)
   end # def filter
 
   # computes a Java stack trace digest
-  def compute_digest(stack_trace, level)
+  def compute_digest(stack_trace)
     md5 = Digest::MD5.new
 
     # 1: extract error class from first line
-    error_class = @error_pattern.match(stack_trace.shift)
-    @logger.debug("Error (#{level}) #{error_class[1]}:")
+    cur_stack_trace_line = stack_trace.shift
+    error_class = @error_pattern.match(cur_stack_trace_line)
+
     # digest: error classname
     md5.update error_class[1]
 
     # 2: read all stack trace elements until stack trace is empty or we hit the next error
     ste_count = 0
     while not stack_trace.empty?
-      if stack_trace.first.start_with?(' ') or stack_trace.first.start_with?("\t")
+      cur_stack_trace_line = stack_trace.first
+      if cur_stack_trace_line.start_with?(' ') or cur_stack_trace_line.start_with?("\t")
         # current line starts with a whitespace: is it a stack trace element ?
-        stack_element = @stack_element_pattern.match(stack_trace.first)
+        stack_element = @stack_element_pattern.match(cur_stack_trace_line)
         if stack_element
           # current line is a stack trace element
           ste_count+=1
-          if is_excluded?(stack_element)
-            @logger.debug("  (-) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})")
-          else
-            @logger.debug("  (+) at #{stack_element[1]}(#{stack_element[2]}:#{stack_element[3]})")
+          if not is_excluded?(stack_element)
             # digest: STE classname and method
             md5.update stack_element[1]
             # digest: line number (if present)
@@ -94,16 +94,17 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
           end
         end
       elsif(ste_count > 0)
-        # current line doesn't start with a whitespace and we've already read stack trace elements: is it the next error in the stack
+        # current line doesn't start with a whitespace and we've already read stack trace elements: it looks like the next error in the stack
         break
       end
       # move to next line
       stack_trace.shift
     end
 
+
     # 3: if stack trace not empty, compute digest for next error
     if not stack_trace.empty?
-      md5.update compute_digest(stack_trace, level+1)
+      md5.update compute_digest(stack_trace)
     end
 
     return md5.hexdigest
@@ -112,7 +113,7 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
   # Determines whether the given stack trace element (Regexp match) should be excluded from digest computation
   def is_excluded?(stack_element)
     # 1: exclude elements without source info ?
-    if @exclude_no_source and (stack_element[2].nil? or stack_element[2].empty?) and (stack_element[3].nil? or stack_element[3].empty?)
+    if @exclude_no_source and (stack_element[3].nil? or stack_element[3].empty?)
       return true
     end
     # 2: Regex based exclusion
