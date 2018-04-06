@@ -48,7 +48,7 @@ function StackDigester(exclude_no_source, exclusion_patterns) {
                     }
                     // populate debugged stack
                     var highlighted_line = cur_stack_trace_line.replace(this.stack_element_pattern, function(match, classname_and_method, file, line) {
-                        var fileAndLine = file ? "<span class='file' title='File'>" + file + "</span>" + (line ? ":<span class='line' title='Line'>" + line + "</span>" : "") : "";
+                        var fileAndLine = file ? "<span class='file' title='File'>" + file + "</span>" + (line ? ":<span class='ln' title='Line'>" + line + "</span>" : "") : "";
                         return "\tat <span class='classname-and-method' title='Classname and method'>" + classname_and_method + "</span>(" + fileAndLine + ")";
                     });
                     if(excluded) {
