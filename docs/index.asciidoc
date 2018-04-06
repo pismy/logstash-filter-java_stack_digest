@@ -78,9 +78,8 @@ The name of the field to assign the computed stack trace digest.
 
 Determines whether stack trace elements without source info (no filename or line number) should be excluded from the digest.
 
-Generally speaking, Java stack trace elements with no source information are dynamically generated classes.
-
-So in most cases it's a wise choice to exclude them from the digest computation (and by the way much faster than evaluating
+Most of the times, Java stack trace elements with no source information are dynamically generated classes. So in most
+cases it's a wise choice to exclude them from the digest computation (and by the way much faster than evaluating
 a list of regular expression patterns).
 
 But you might also have no source information for classes *not compiled in debug mode*. In such a case, set this option
@@ -105,7 +104,9 @@ Non stable elements are:
 * underlying *technical libraries* (vendor specific JDK classes, JEE container, Spring Framework, ...):
 because they may change when upgrading version or even changing your configuration (ex: adding a new servlet filter).
 
-For more information about the https://github.com/pismy/logstash-filter-java_stack_digest/blob/master/stack-digest.md[stack digest stability challenge].
+More information about the https://pismy.github.io/logstash-filter-java_stack_digest/challenge.html[stack digest stability challenge].
+
+If you encounter troubles configuring the filter to compute stable digests, https://pismy.github.io/logstash-filter-java_stack_digest/debugger.html[checkout this handy online debugger].
 
 Default exclusion patterns:
 [source,ruby]
