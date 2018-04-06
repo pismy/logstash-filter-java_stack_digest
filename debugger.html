@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stack Digest Debugger</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<style>
+    .code {
+        font-family: monospace;
+        white-space: nowrap;
+    }
+    #highlightedStackTrace {
+        border: 1px solid #ced4da;
+        overflow: scroll;
+    }
+    #highlightedStackTrace .placeholder {
+        padding: 30px;
+        color: #555555;
+        font-style: italic;
+    }
+    #stackTraceLines .line {
+        line-height: 1.5;
+        margin: 0;
+    }
+    #highlightedStackTrace .marker {
+        cursor: pointer;
+        margin-right: 5px;
+        padding: 0 10px;
+        border-right: 1px solid #ced4da;
+        font-weight: bold;
+        color: #555555;
+        display: inline-block;
+    }
+    #highlightedStackTrace .error {
+        background-color: #cce5ff;
+    }
+    #highlightedStackTrace .error .marker {
+        background-color: #004085;
+        color: white;
+    }
+    #highlightedStackTrace .match {
+        background-color: #ecfdf0;
+    }
+    #highlightedStackTrace .match .marker {
+        background-color: #ddfbe6;
+    }
+    #highlightedStackTrace .ignored {
+        background-color: #fff;
+    }
+    #highlightedStackTrace .ignored .marker {
+        background-color: #fafafa;
+    }
+    #highlightedStackTrace .excluded {
+        background-color: #fbe9eb;
+    }
+    #highlightedStackTrace .excluded .marker {
+        background-color: #f9d7dc;
+    }
+    #highlightedStackTrace .error-class {
+        font-weight: bold;
+    }
+    #highlightedStackTrace .error-class:hover, #highlightedStackTrace .classname-and-method:hover, #highlightedStackTrace .file:hover, #highlightedStackTrace .line:hover {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    #highlightedStackTrace .error-class {
+        font-weight: bold;
+        color: #004085;
+    }
+    #highlightedStackTrace .classname-and-method {
+        color: #2b6799;
+    }
+    #highlightedStackTrace .file {
+        color: #993b86;
+    }
+    #highlightedStackTrace .line {
+        color: #664d99;
+    }
+</style>
+<body>
+<!-- header fragment with navigation bar -->
+<header id="header">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="challenge.html">The stability challenge</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="debugger.html">Debugger <span class="sr-only">(current)</span></a>
+                    </li>
+                </ul>
+            </div>
+            <a class="nav-link" href="https://github.com/pismy/logstash-filter-java_stack_digest">GitHub project</a>
+        </div>
+    </nav>
+</header>
+
+<div class="container page-body">
+    <h1>Stack Digest Debugger</h1>
+
+    <div class="alert alert-primary">
+        <p>This page helps you configure and debug your <i>Java Stack Digest filter plugin</i>.</p>
+    </div>
+
+    <h2 lass="my-3">Exclude options</h2>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="excludeNoSource" checked>
+            <label class="form-check-label" for="excludeNoSource">exclude elements without source info</label>
+            <small class="form-text text-muted">stack trace elements without source info (file and line) are generally generated classes</small>
+        </div>
+        <div class="form-group">
+            <label for="exclusionPatterns">exclude elements matching pattern:</label>
+            <textarea class="form-control code" id="exclusionPatterns" rows="5" cols="30" placeholder="type in your exclusion patterns here (one per line)...">
+^sun\.reflect\..*\.invoke
+^java\.lang\.reflect\.Method\.invoke
+^java\.util\.concurrent\.ThreadPoolExecutor\.runWorker
+^java\.lang\.Thread\.run$
+^com\.sun\.
+^sun\.net\.
+\$\$FastClassByCGLIB\$\$
+\$\$EnhancerBySpringCGLIB\$\$
+^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</textarea>
+            <small class="form-text text-muted">exclusion patterns are tested against stack trace elements <strong>classname+method</strong></small>
+        </div>
+    <h2 lass="my-3">Java stack trace</h2>
+        <div class="form-group">
+            <textarea class="form-control code" id="stackTrace" rows="20" placeholder="type in your Java stack trace here...">com.xyz.MyApp$MyClient$MyClientException: An error occurred while getting Alice's things
+and the error message wraps on
+ several lines
+  at com.xyz.MyApp$MyClient.getTheThings(MyApp.java:26)
+  at com.xyz.MyApp$MyService.displayThings(MyApp.java:16)
+  at com.xyz.MyApp$MyService$$FastClassByCGLIB$$e7645040.invoke()
+  at net.sf.cglib.proxy.MethodProxy.invoke()
+  at org.springframework.aop.framework.Cglib2AopProxy$CglibMethodInvocation.invokeJoinpoint()
+  at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed()
+  at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed()
+  at sun.reflect.NativeMethodAccessorImpl.invoke0()
+  at sun.reflect.NativeMethodAccessorImpl.invoke()
+  at sun.reflect.DelegatingMethodAccessorImpl.invoke()
+  at java.lang.reflect.Method.invoke()
+  at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs()
+  at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod()
+  at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke()
+  at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed()
+  at org.springframework.aop.interceptor.AbstractTraceInterceptor.invoke()
+  at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed()
+  at org.springframework.transaction.interceptor.TransactionInterceptor.invoke()
+  at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed()
+  at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke()
+  at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed()
+  at org.springframework.aop.framework.Cglib2AopProxy$DynamicAdvisedInterceptor.intercept()
+  at com.xyz.MyApp$MyService$$EnhancerBySpringCGLIB$$c673c675.displayThings(&lt;generated&gt;)
+  at sun.reflect.GeneratedMethodAccessor647.invoke(Unknown Source)
+  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+  at java.lang.reflect.Method.invoke(Method.java:498)
+  at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:205)
+  at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:133)
+  at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:116)
+  at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:827)
+  at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:738)
+  at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:85)
+  at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:963)
+  at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:897)
+  at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:970)
+  at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:861)
+  at javax.servlet.http.HttpServlet.service(HttpServlet.java:624)
+  at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:846)
+  at javax.servlet.http.HttpServlet.service(HttpServlet.java:731)
+  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:303)
+  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:208)
+  at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:241)
+  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:208)
+  ...
+  at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:331)
+  at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:214)
+  at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:177)
+  at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:346)
+  at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:262)
+  at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:241)
+  at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:208)
+  ...
+  at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:116)
+  at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:436)
+  at org.apache.coyote.http11.AbstractHttp11Processor.process(AbstractHttp11Processor.java:1078)
+  at org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process(AbstractProtocol.java:625)
+  at org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor.run(JIoEndpoint.java:316)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)
+  at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+  at java.lang.Thread.run(Thread.java:748)
+  ...
+Caused by: com.xyz.MyApp$HttpStack$HttpError: I/O error on GET http://dummy/user/alice/things
+  at com.xyz.MyApp$HttpStack.get(MyApp.java:40)
+  at com.xyz.MyApp$MyClient.getTheThings(MyApp.java:24)
+  ... 23 common frames omitted
+Caused by: java.net.SocketTimeoutException: Read timed out
+  at com.xyz.MyApp$HttpStack.get(MyApp.java:38)
+  ... 24 common frames omitted</textarea>
+        </div>
+        <button class="btn btn-primary" id="compute">Compute!</button>
+
+    <h2 class="my-3">Digest</h2>
+    <div id="digest" class="alert alert-primary">computed digest will appear here</div>
+
+    <h2 class="my-3">Details</h2>
+    <div id="highlightedStackTrace" class="rounded">
+        <div id="stackTraceLines" class="code"><div class="placeholder">detailed stack trace matches will appear here</div></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="js/md5.js"></script>
+<script src="js/stack-digest.js"></script>
+<script language="JavaScript">
+    $(document).ready(function(){
+        $("#compute").click(function(){
+            var exclude_no_source = $("#excludeNoSource").prop("checked");
+            var exclusion_patterns = $("#exclusionPatterns").val().trim().split("\n").map(function (pattern) {
+                try {
+                    return new RegExp(pattern);
+                } catch(e) {
+                    alert("Invalid RegExp pattern: '"+pattern+"'");
+                }
+            });
+            var stack_lines = $("#stackTrace").val().trim().split("\n");
+            var debugged_stack = [];
+            var digest = new StackDigester(exclude_no_source, exclusion_patterns).compute(stack_lines, debugged_stack);
+            $("#digest").text(digest);
+            $("#stackTraceLines").html(debugged_stack.join("\n"));
+        });
+    });
+</script>
+
+</body>
+</html>
