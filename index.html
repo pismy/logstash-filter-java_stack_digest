@@ -46,16 +46,17 @@
 
     <p>A full Java stack trace is very helpful to analyse and debug a single error, but is not very handy to compare two
         errors.</p>
+
     <p>The idea is to turn a full Java stack trace into a <strong>short</strong> and <strong>stable</strong> digest,
         that could help matching several
         distinct occurrences of the same type of error:</p>
     <ul>
         <li><strong>short</strong> for easing elasticsearch indexing, and take advantage of it (we use a MD5 hash),</li>
         <li><strong>stable</strong> is the tricky part, as the same type of error occurring twice may not generate
-            exactly the same stack trace
-            (see below).
+            exactly the same stack trace (see  <a href="challenge.html">challenge</a>).
         </li>
     </ul>
+
     <p>This done, it becomes easy with elasticsearch or any other logs centralization and indexation system to:</p>
     <ul>
         <li><strong>count</strong> distinct type of errors that occur in your code over time,</li>
@@ -64,8 +65,9 @@
             version being deployed?).
         </li>
     </ul>
+
     <p>The stack digest may also become a simple error id that you can link your bug tracker with...</p>
 
-
+</div>
 </body>
 </html>

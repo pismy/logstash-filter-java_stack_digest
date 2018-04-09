@@ -33,7 +33,16 @@
         </div>
     </nav>
 </header>
-
+<style>
+    .stack {
+        border: 1px solid #ced4da;
+        font-family: monospace;
+        overflow: scroll;
+        padding: 10px;
+        background-color: lightyellow;
+        font-size: 1rem;
+    }
+</style>
 <div class="container page-body">
     <h1>The stack digest stability challenge</h1>
 
@@ -45,7 +54,7 @@
     <h2>A few examples</h2>
         <h3>Let's consider error stack 1</h3>
         <p><em>(the stack trace presented here has been cut by half from useless lines)</em></p>
-        <pre><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting Alice's things</strike><sup>(msg)</sup>
+        <pre class="stack rounded"><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting Alice's things</strike><sup>(msg)</sup>
   at <b>com.xyz.MyApp$MyClient.getTheThings(MyApp.java:26)</b>
   at <b>com.xyz.MyApp$MyService.displayThings(MyApp.java:16)</b>
   at <strike>com.xyz.MyApp$MyService$$FastClassByCGLIB$$e7645040.invoke()</strike><sup>(aop)</sup>
@@ -134,7 +143,7 @@ Caused by: <b>java.net.SocketTimeoutException</b>: <strike>Read timed out</strik
 
         <h3>Now let's consider error stack 2</h3>
         <p><em>(shortened)</em></p>
-        <pre><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting <b>Bob</b>'s things</strike><sup>(msg)</sup>
+        <pre class="stack rounded"><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting <b>Bob</b>'s things</strike><sup>(msg)</sup>
   at <b>com.xyz.MyApp$MyClient.getTheThings(MyApp.java:26)</b>
   at <b>com.xyz.MyApp$MyService.displayThings(MyApp.java:16)</b>
   at <strike>com.xyz.MyApp$MyService$$FastClassByCGLIB$$<b>07e70d1e</b>.invoke()</strike><sup>(aop)</sup>
@@ -177,7 +186,7 @@ Caused by: <b>java.net.SocketTimeoutException</b>: <strike>Read timed out</strik
 
         <h3>Now let's consider error stack 3</h3>
         <p><em>(shortened)</em></p>
-        <pre><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting Alice's things</strike><sup>(msg)</sup>
+        <pre class="stack rounded"><b>com.xyz.MyApp$MyClient$MyClientException</b>: <strike>An error occurred while getting Alice's things</strike><sup>(msg)</sup>
   at <b>com.xyz.MyApp$MyClient.getTheThings(MyApp.java:26)</b>
   at <b>com.xyz.MyApp$MyService.displayThings(MyApp.java:16)</b>
   at <strike>com.xyz.MyApp$MyService$$FastClassByCGLIB$$e7645040.invoke()</strike><sup>(aop)</sup>
