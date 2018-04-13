@@ -1,4 +1,4 @@
-function StackDigester(exclude_no_source, exclusion_patterns) {
+function StackDigester(exclude_no_source, inclusion_patterns, exclusion_patterns) {
     // Regexp to capture the Error classname from the first stack trace line
     // group 1: error classname
     this.error_pattern = /((?:[\w$]+\.){2,}[\w$]+):/
@@ -10,6 +10,8 @@ function StackDigester(exclude_no_source, exclusion_patterns) {
     this.stack_element_pattern = /^\s+at\s+((?:[\w$]+\.){2,}[\w$]+)\((?:([^:]+)(?::(\d+))?)?\)/
 
     this.exclude_no_source = exclude_no_source;
+
+    this.inclusion_patterns = inclusion_patterns;
 
     this.exclusion_patterns = exclusion_patterns;
 
@@ -81,13 +83,24 @@ function StackDigester(exclude_no_source, exclusion_patterns) {
     // Determines whether the given stack trace element (Regexp match) should be excluded from digest computation
     this.is_excluded = function(stack_element) {
         // 1: exclude elements without source info ?
-        if (this.exclude_no_source && (!stack_element[2] || !stack_element[3])) {
+        var lineNb = stack_element[3];
+        if (this.exclude_no_source && !lineNb) {
             return "no source info";
         }
-        // 2: Regex based exclusion
+        var classnameAndMethod = stack_element[1];
+        // 2: Regex based inclusion
+        if(this.inclusion_patterns.length > 0) {
+            var includedBy = this.inclusion_patterns.find(function (pattern) {
+                return classnameAndMethod.match(pattern);
+            });
+            if(!includedBy) {
+                return "not matching any inclusion pattern"
+            }
+        }
+        // 3: Regex based exclusion
         var excludedBy = this.exclusion_patterns.find(function (pattern) {
-            return stack_element[1].match(pattern);
+            return classnameAndMethod.match(pattern);
         });
-        return excludedBy ? "excl. by "+excludedBy.toString() : null;
+        return excludedBy ? "excluded by "+excludedBy.toString() : null;
     }
 }

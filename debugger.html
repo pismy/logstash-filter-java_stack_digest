@@ -8,6 +8,9 @@
 <style>
     .code {
         font-family: monospace;
+        white-space: nowrap;
+    }
+    textarea.code {
         white-space: pre;
     }
     #highlightedStackTrace {
@@ -118,6 +121,11 @@
             <label class="form-check-label" for="excludeNoSource">exclude elements without source info</label>
             <small class="form-text text-muted">stack trace elements without source info (file and line) are generally generated classes</small>
         </div>
+    <div class="form-group">
+        <label for="inclusionPatterns">include elements matching pattern:</label>
+        <textarea class="form-control code" id="inclusionPatterns" rows="2" cols="30" placeholder="type in your inclusion patterns here (one per line)..."></textarea>
+        <small class="form-text text-muted">inclusion patterns are tested against stack trace elements <strong>classname+method</strong></small>
+    </div>
         <div class="form-group">
             <label for="exclusionPatterns">exclude elements matching pattern:</label>
             <textarea class="form-control code" id="exclusionPatterns" rows="5" cols="30" placeholder="type in your exclusion patterns here (one per line)...">
@@ -231,12 +239,19 @@ Caused by: java.net.SocketTimeoutException: Read timed out
                 try {
                     return new RegExp(pattern);
                 } catch(e) {
-                    alert("Invalid RegExp pattern: '"+pattern+"'");
+                    alert("Invalid exclusion pattern: '"+pattern+"'");
+                }
+            });
+            var inclusion_patterns = $("#inclusionPatterns").val().trim().split("\n").map(function (pattern) {
+                try {
+                    return new RegExp(pattern);
+                } catch(e) {
+                    alert("Invalid inclusion pattern: '"+pattern+"'");
                 }
             });
             var stack_lines = $("#stackTrace").val().trim().split("\n");
             var debugged_stack = [];
-            var digest = new StackDigester(exclude_no_source, exclusion_patterns).compute(stack_lines, debugged_stack);
+            var digest = new StackDigester(exclude_no_source, inclusion_patterns, exclusion_patterns).compute(stack_lines, debugged_stack);
             $("#digest").text(digest);
             $("#stackTraceLines").html(debugged_stack.join("\n"));
         });
