@@ -35,6 +35,19 @@ The stack hash may also become a basic error id that you could link your bug tra
 This is a basic port of the https://github.com/logstash/logstash-logback-encoder/blob/master/stack-hash.md[stack hash feature]
 from the `logstash-logback-encoder` Java library.
 
+Filter configuration example:
+[source,ruby]
+  filter {
+    java_stack_digest {
+      source => 'java_stack'
+      target => 'error_digest'
+      exclude_no_source => true
+      includes => ['^com\\.xyz\\.', '^java\\.']
+      excludes => ['\\$\\$FastClassByCGLIB\\$\\$', '\\$\\$EnhancerBySpringCGLIB\\$\\$']
+    }
+  }
+
+
 [id="plugins-{type}s-{plugin}-options"]
 ==== Java Stack Digest Filter Configuration Options
 
@@ -46,6 +59,7 @@ This plugin supports the following configuration options plus the <<plugins-{typ
 | <<plugins-{type}s-{plugin}-source>> |<<string,string>>|No
 | <<plugins-{type}s-{plugin}-target>> |<<string,string>>|No
 | <<plugins-{type}s-{plugin}-exclude_no_source>> |<<boolean,boolean>>|No
+| <<plugins-{type}s-{plugin}-includes>> |<<array,array>>|No
 | <<plugins-{type}s-{plugin}-excludes>> |<<array,array>>|No
 |=======================================================================
 
@@ -85,6 +99,23 @@ a list of regular expression patterns).
 But you might also have no source information for classes *not compiled in debug mode*. In such a case, set this option
 to `false` and tweak your `excludes` patterns.
 
+[id="plugins-{type}s-{plugin}-includes"]
+===== `includes`
+
+  * Value type is <<array,array>>
+  * Defaults value is no inclusion pattern
+
+As long as the inclusion patterns array is left empty, stack trace elements will only be excluded by <<plugins-{type}s-{plugin}-excludes>>
+patterns.
+
+When this is set to a non-empty array of patterns, the plugin will first check stack trace elements match at least one
+inclusion pattern, before checking exclusion patterns.
+
+Example:
+[source,ruby]
+includes ==> ['^my\\.app.\\package\\.', '^java\\.']
+
+
 [id="plugins-{type}s-{plugin}-excludes"]
 ===== `excludes`
 
@@ -110,7 +141,7 @@ If you encounter troubles configuring the filter to compute stable digests, http
 
 Default exclusion patterns:
 [source,ruby]
-   [
+excludes ==> [
      '\\$\\$FastClassByCGLIB\\$\\$',
      '\\$\\$EnhancerBySpringCGLIB\\$\\$',
      '^sun\\.reflect\\..*\\.invoke',
@@ -121,7 +152,6 @@ Default exclusion patterns:
      '^java\\.util\\.concurrent\\.ThreadPoolExecutor\\.runWorker',
      '^java\\.lang\\.Thread\\.run$'
    ]
-
 
 
 [id="plugins-{type}s-{plugin}-common-options"]

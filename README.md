@@ -1,79 +1,53 @@
 # Logstash Plugin
 
-This is a plugin for [Logstash](https://github.com/elastic/logstash).
+This is a filter plugin for [Logstash](https://github.com/elastic/logstash) that enables computing a *stable* digest 
+(MD5) from a Java stack trace.
 
 It is fully free and fully open source. The license is Apache 2.0, meaning you are pretty much free to use it however you want in whatever way.
 
+
 ## Documentation
 
-Logstash provides infrastructure to automatically generate documentation for this plugin. We use the asciidoc format to write documentation so any comments in the source code will be first converted into asciidoc and then into html. All plugin documentation are placed under one [central location](http://www.elastic.co/guide/en/logstash/current/).
+Goal and principles are described in the project [GitHub pages](https://pismy.github.io/logstash-filter-java_stack_digest/).
 
-- For formatting code or config example, you can use the asciidoc `[source,ruby]` directive
-- For more asciidoc formatting tips, see the excellent reference here https://github.com/elastic/docs#asciidoc-guide
+You'll also find an [online debugger](https://pismy.github.io/logstash-filter-java_stack_digest/debugger.html) to help 
+you configure and debug your plugin options.
 
-## Need Help?
 
-Need help? Try #logstash on freenode IRC or the https://discuss.elastic.co/c/logstash discussion forum.
+## Install in Logstash
 
-## Developing
-
-### 1. Plugin Developement and Testing
-
-#### Code
-- To get started, you'll need JRuby with the Bundler gem installed.
-
-- Create a new plugin or clone and existing from the GitHub [logstash-plugins](https://github.com/logstash-plugins) organization. We also provide [example plugins](https://github.com/logstash-plugins?query=example).
-
-- Install dependencies
+- Download the plugin from [RubyGems](https://rubygems.org/gems/logstash-filter-java_stack_digest).
 ```sh
-bundle install
-```
-
-#### Test
-
-- Update your dependencies
-
-```sh
-bundle install
-```
-
-- Run tests
-
-```sh
-bundle exec rspec
-```
-
-### 2. Running your unpublished Plugin in Logstash
-
-#### 2.1 Run in a local Logstash clone
-
-- Edit Logstash `Gemfile` and add the local plugin path, for example:
-```ruby
-gem "logstash-filter-awesome", :path => "/your/local/logstash-filter-awesome"
-```
-- Install plugin
-```sh
-bin/logstash-plugin install --no-verify
-```
-- Run Logstash with your plugin
-```sh
-bin/logstash -e 'filter {awesome {}}'
-```
-At this point any modifications to the plugin code will be applied to this local Logstash setup. After modifying the plugin, simply rerun Logstash.
-
-#### 2.2 Run in an installed Logstash
-
-You can use the same **2.1** method to run your plugin in an installed Logstash by editing its `Gemfile` and pointing the `:path` to your local plugin development directory or you can build the gem and install it using:
-
-- Build your plugin gem
-```sh
-gem build logstash-filter-awesome.gemspec
+gem install logstash-filter-java_stack_digest
 ```
 - Install the plugin from the Logstash home
 ```sh
-bin/logstash-plugin install /your/local/plugin/logstash-filter-awesome.gem
+bin/logstash-plugin install logstash-filter-java_stack_digest.gem
 ```
+- Configure the plugin in Logstash configuration
 - Start Logstash and proceed to test the plugin
+
+## Configuration
+
+This plugin supports the following configuration options:
+* `source` (type `string`): the name of the field containing the Java stack trace option (default value: `"stack_trace"`)
+* `target` (type `string`): the name of the field to assign the computed stack trace digest (default value: `"stack_digest"`)
+* `exclude_no_source` (type `boolean`): whether stack trace elements without source info (no filename or line number) should be excluded from the digest  (default value: `true`)
+* `includes` (type `array` of `string`): RegExp patterns determining whether stack trace elements should be **included** from digest (defaults to none - _exclusion patterns only_)
+* `excludes` (type `array` of `string`): RegExp patterns determining whether stack trace elements should be **excluded** from digest (defaults to standard dynamic Java reflection and generated classes patterns)
+
+Filter configuration example:
+```ruby
+  filter {
+    java_stack_digest {
+      source => 'java_stack'
+      target => 'error_digest'
+      exclude_no_source => true
+      includes => ['^com\\.xyz\\.', '^java\\.']
+      excludes => ['\\$\\$FastClassByCGLIB\\$\\$', '\\$\\$EnhancerBySpringCGLIB\\$\\$']
+    }
+  }
+```
 
 ## Contributing
 

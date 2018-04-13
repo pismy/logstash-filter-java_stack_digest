@@ -26,9 +26,12 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
   # Determines whether stack trace elements without source info (no filename or line number) should be excluded from the digest (default 'true')
   config :exclude_no_source, :validate => :boolean, :default => true
 
+  # Array of regular expressions to include stack trace elements
+  # defaults: empty; if non-empty, matching will start with includes, then filter out excludes
+  config :includes, :validate => :array, :default => []
+
   # Array of regular expressions to exclude stack trace elements
   # defaults to standard dynamic classes and method invocations
-  # config :excludes, :validate => :array, :default => %w["\\$\\$FastClassByCGLIB\\$\\$", "\\$\\$EnhancerBySpringCGLIB\\$\\$", "^sun\\.reflect\\..*\\.invoke", "^com\\.sun\\.", "^sun\\.net\\.", "^java\\.lang\\.reflect\\.Method\\.invoke", "^net\\.sf\\.cglib\\.proxy\\.MethodProxy\\.invoke", "^java\\.util\\.concurrent\\.ThreadPoolExecutor\\.runWorker","^java\\.lang\\.Thread\\.run$" ]
   config :excludes, :validate => :array, :default => [/\$\$FastClassByCGLIB\$\$/, /\$\$EnhancerBySpringCGLIB\$\$/, /^sun\.reflect\..*\.invoke/, /^com\.sun\./, /^sun\.net\./, /^java\.lang\.reflect\.Method\.invoke/, /^net\.sf\.cglib\.proxy\.MethodProxy\.invoke/, /^java\.util\.concurrent\.ThreadPoolExecutor\.runWorker/, /^java\.lang\.Thread\.run$/ ]
 
   public
@@ -44,6 +47,9 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
     # group 2: filename (optional)
     # group 3: line number (optional)
     @stack_element_pattern = /^\s+at\s+((?:[\w$]+\.){2,}[\w$]+)\((?:([^:]+)(?::(\d+))?)?\)/
+
+    # coerce includes to an array of Regexp
+    @includes = @includes.collect {|pattern| Regexp::new(pattern)}
 
     # coerce excludes to an array of Regexp
     @excludes = @excludes.collect {|pattern| Regexp::new(pattern)}
@@ -116,9 +122,21 @@ class LogStash::Filters::JavaStackDigest < LogStash::Filters::Base
     if @exclude_no_source and (stack_element[3].nil? or stack_element[3].empty?)
       return true
     end
-    # 2: Regex based exclusion
+
+    # 2: Regex based inclusions
+    classname_and_method = stack_element[1]
+    if not @includes.empty?
+      match_idx = @includes.index do |pattern|
+        pattern.match(classname_and_method)
+      end
+      if match_idx.nil?
+        return true
+      end
+    end
+
+    # 3: Regex based exclusions
     @excludes.each do |pattern|
-      if pattern.match(stack_element[1])
+      if pattern.match(classname_and_method)
         return true
       end
     end

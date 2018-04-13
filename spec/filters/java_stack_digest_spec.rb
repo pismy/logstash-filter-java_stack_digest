@@ -144,6 +144,25 @@ Caused by: java.net.SocketTimeoutException: Read timed out
   end
 
   # ---------------------------------------------------------------------
+  describe "Digest with inclusion and exclusion config" do
+    let(:config) do <<-CONFIG
+      filter {
+        java_stack_digest {
+          exclude_no_source => true
+          includes => ['^com\\.xyz\\.']
+          excludes => ['\\$\\$FastClassByCGLIB\\$\\$', '\\$\\$EnhancerBySpringCGLIB\\$\\$']
+        }
+      }
+    CONFIG
+    end
+
+    sample("stack_trace" => stack_trace) do
+      expect(subject).to include("stack_digest")
+      expect(subject.get('stack_digest')).to eq('fa54771601828e9a2964ed0651e8c09c')
+    end
+  end
+
+  # ---------------------------------------------------------------------
   describe "Digest should be computed if stack trace present with non default config" do
     let(:config) do <<-CONFIG
       filter {
